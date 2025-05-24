@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id          String    @id
+  shop        String
+  state       String
+  isOnline    Boolean   @default(false)
+  scope       String?
+  expires     DateTime?
+  accessToken String
+  userId      String?
+  firstName   String?
+  lastName    String?
+  email       String?
+  accountOwner Boolean  @default(false)
+  locale      String?
+  collaborator Boolean? @default(false)
+  emailVerified Boolean? @default(false)
+}
+
+model ShopifyOrder {
+  id                String   @id // Shopify order ID
+  name              String   // Order name (e.g., #1001)
+  email             String?
+  financialStatus   String?  // paid, pending, etc.
+  fulfillmentStatus String?  // fulfilled, partial, unfulfilled
+  totalPrice        String
+  currency          String
+  createdAt         DateTime
+  updatedAt         DateTime @updatedAt
+  
+  // Print on demand integration
+  podOrderId        String?  // ID from print-on-demand service
+  podStatus         String?  // Status from print-on-demand service
+  podSentAt         DateTime?
+  
+  // JSON field for storing full order data
+  orderData         String   // JSON string of the full Shopify order
+  
+  @@map("shopify_orders")
+}
+
+model PrintOnDemandOrder {
+  id            String   @id @default(cuid())
+  shopifyOrderId String
+  podApiOrderId String?
+  status        String   @default("pending") // pending, sent, processing, completed, failed
+  products      String   // JSON array of products sent to POD API
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  errorMessage  String?
+  
+  @@map("pod_orders")
+}
+
+model AppSettings {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("app_settings")
+}
